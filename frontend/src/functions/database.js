@@ -16,7 +16,7 @@ async function fetchUserName() {
 
 async function fetchMajorCount() {
     try {
-        const response = await axios.get("http://localhost:5000/majorCounts")
+        const response = await axios.get("http://localhost:5000/total-counts")
         if (response.status == 200) {
             return response.data.counts
         }
@@ -27,7 +27,7 @@ async function fetchMajorCount() {
 
 async function fetchUGDeptCount() {
     try {
-        const response = await axios.get("http://localhost:5000/ugDeptCounts")
+        const response = await axios.get("http://localhost:5000/ug-dept-counts")
         if (response.status == 200) {
             return response.data.counts
         }
@@ -38,7 +38,7 @@ async function fetchUGDeptCount() {
 
 async function fetchPGDeptCount() {
     try {
-        const response = await axios.get("http://localhost:5000/pgDeptCounts")
+        const response = await axios.get("http://localhost:5000/pg-dept-counts")
         if (response.status == 200) {
             return response.data.counts
         }
@@ -47,9 +47,9 @@ async function fetchPGDeptCount() {
     }
 }
 
-async function fetchLogs() {
+async function fetchStudentsLogs() {
     try {
-        const response = await axios.get("http://localhost:5000/logs")
+        const response = await axios.get("http://localhost:5000/students-logs")
         if (response.status == 200) {
             return response.data.logs.slice(0, 5)
         }
@@ -58,7 +58,7 @@ async function fetchLogs() {
     }
 }
 
-async function fetchData() {
+async function fetchStudentsData() {
     try {
         const response = await axios.get("http://localhost:5000/students");
         if (response.status === 200) {
@@ -69,9 +69,9 @@ async function fetchData() {
     }
 }
 
-async function deleteData(id) {
+async function deleteStudentData(id) {
     try {
-        const response = await axios.delete(`http://localhost:5000/delete?id=${id}`);
+        const response = await axios.delete(`http://localhost:5000/delete-student?id=${id}`);
         if (response.status === 200) {
             return true;
         }
@@ -81,9 +81,9 @@ async function deleteData(id) {
     }
 }
 
-async function filterData(queryString) {
+async function filterStudentsData(queryString) {
     try {
-        const response = await axios.get(`http://localhost:5000/filter?${queryString}`);
+        const response = await axios.get(`http://localhost:5000/filter-students?${queryString}`);
 
         if (response.status === 200) {
             return response.data
@@ -118,14 +118,135 @@ async function addStudentData(queryString) {
     }
 }
 
+async function checkAdmin() {
+    try {
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Authentication token is missing.");
+
+        const response = await axios.get(
+            "http://localhost:5000/check-admin", { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.status === 200) {
+            return response.data.admin;
+        }
+    } catch (error) {
+        console.error(error);
+        if (error.response && error.response.data && error.response.data.error) {
+            throw new Error(error.response.data.error);
+        } else {
+            throw new Error(error.message);
+        }
+    }
+}
+
+async function fetchProfile() {
+    try {
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Authentication token is missing.");
+        const response = await axios.get(
+            "http://localhost:5000/profile", { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.status === 200) {
+            return response.data;
+        }
+    } catch (error) {
+        console.error(error);
+        if (error.response && error.response.data && error.response.data.error) {
+            throw new Error(error.response.data.error);
+        } else {
+            throw new Error(error.message);
+        }
+    }
+}
+
+async function fetchStaffsData() {
+    try {
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Authentication token is missing.");
+        const response = await axios.get("http://localhost:5000/staffs");
+
+        if (response.status === 200) {
+            return response.data;
+        }
+    } catch (error) {
+        console.error(error);
+        if (error.response && error.response.data && error.response.data.error) {
+            throw new Error(error.response.data.error);
+        } else {
+            throw new Error(error.message);
+        }
+    }
+}
+
+async function deleteStaffData(id) {
+    try {
+        const response = await axios.delete(`http://localhost:5000/delete-staff?id=${id}`);
+        if (response.status === 200) {
+            return true;
+        }
+    } catch (error) {
+        console.error(error);
+        if (error.response && error.response.data && error.response.data.error) {
+            throw new Error(error.response.data.error);
+        } else {
+            throw new Error(error.message);
+        }
+    }
+}
+
+async function filterStaffsData(queryString) {
+    try {
+        const response = await axios.get(`http://localhost:5000/filter-staffs?${queryString}`);
+
+        if (response.status === 200) {
+            return response.data
+        }
+    } catch (error) {
+        console.error(error);
+        if (error.response) {
+            throw new Error(error.response.data.error || "Failed  to apply filters.")
+        } else if (error.request) {
+            throw new Error("Server did not respond. Please check your network.")
+        } else {
+            throw new Error(`Error: ${error.response}`)
+        }
+    }
+}
+
+async function addStaffData(queryString) {
+    try {
+        const response = await axios.get(`http://localhost:5000/add-staff?${queryString}`)
+        if (response.status === 200) {
+            return true
+        }
+    } catch (error) {
+        console.error(error);
+        if (error.response) {
+            throw new Error(error.response.data.error || "Failed  to upload data.")
+        } else if (error.request) {
+            throw new Error("Server did not respond. Please check your network.")
+        } else {
+            throw new Error(`Error: ${error.response}`)
+        }
+    }
+}
+
 export {
     fetchUserName,
     fetchMajorCount,
     fetchUGDeptCount,
     fetchPGDeptCount,
-    fetchLogs,
-    fetchData,
-    deleteData,
-    filterData,
+    fetchStudentsLogs,
+    fetchStudentsData,
+    deleteStudentData,
+    filterStudentsData,
     addStudentData,
+    checkAdmin,
+    fetchProfile,
+    fetchStaffsData,
+    deleteStaffData,
+    filterStaffsData,
+    addStaffData,
 }

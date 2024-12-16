@@ -4,9 +4,9 @@ import Dropdown from "./dropdown";
 import TextField from "./text_field";
 import DropdownWithTextField from "./dropdown_text";
 import { buildQueryString } from "../functions/helpers";
-import { filterData } from "../functions/database";
+import { filterStudentsData } from "../functions/database";
 
-function Filters({ onFilterApply }) {
+function StudentsFilters({ onFilterApply }) {
     const genderOptions = ['', 'Male', 'Female', 'Other'];
     const degreeOptions = ['', 'B.E', 'B.Tech', 'M.E', 'M.Tech'];
     const yearOptions = ['', 1, 2, 3, 4];
@@ -79,7 +79,7 @@ function Filters({ onFilterApply }) {
     async function handleApplyFilters() {
         try {
             const queryString = buildQueryString(filters);
-            const filteredData = await filterData(queryString);
+            const filteredData = await filterStudentsData(queryString);
             onFilterApply(filteredData);
         } catch (error) {
             console.error("Error applying filters:", error.message);
@@ -213,4 +213,4 @@ function Filters({ onFilterApply }) {
     );
 }
 
-export default Filters;
+export default StudentsFilters;

@@ -1,11 +1,11 @@
 import Button from "../components/button"
 import Snackbar from "../components/snack_bar";
-import Filters from "../components/filters"
+import StudentsFilters from "../components/students_filters"
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkAuthentication } from "../functions/authentication"
-import { deleteData, fetchData } from "../functions/database";
-import { buildQueryString, formatDate } from "../functions/helpers";
+import { deleteStudentData, fetchStudentsData } from "../functions/database";
+import { formatDate } from "../functions/helpers";
 
 function StudentsDB() {
     const navigate = useNavigate();
@@ -77,7 +77,7 @@ function StudentsDB() {
                 const isAuthenticated = await checkAuthentication();
                 setIsAuthenticated(isAuthenticated);
 
-                const newData = await fetchData();
+                const newData = await fetchStudentsData();
                 if (newData) {
                     setData(newData);
                 } else {
@@ -108,7 +108,7 @@ function StudentsDB() {
 
     async function handleDelete(id) {
         try {
-            const status = await deleteData(id);
+            const status = await deleteStudentData(id);
             if (status) {
                 setData(prevData => prevData.filter(item => item.id !== id));
                 setSnackbarMessage("Data is deleted successfully.");
@@ -146,7 +146,7 @@ function StudentsDB() {
                         <Button name="Add Student Data" onClick={() => { navigate("/student-form", { state: {} }) }} />
                     </div>
                 </div>
-                <Filters onFilterApply={handleFilters} />
+                <StudentsFilters onFilterApply={handleFilters} />
                 {isLoading ? (
                     <p>Loading...</p>
                 ) : data.length > 0 ? (

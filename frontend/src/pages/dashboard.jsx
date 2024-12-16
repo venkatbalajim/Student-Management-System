@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PrimaryCard, SecondaryCard } from "../components/count_cards";
 import { checkAuthentication } from "../functions/authentication";
-import { fetchLogs, fetchMajorCount, fetchPGDeptCount, fetchUGDeptCount, fetchUserName } from "../functions/database";
+import { fetchStudentsLogs, fetchMajorCount, fetchPGDeptCount, fetchUGDeptCount, fetchUserName } from "../functions/database";
 
 function Dashboard() {
     const navigate = useNavigate();
@@ -64,7 +64,7 @@ function Dashboard() {
                     fetchMajorCount(),
                     fetchUGDeptCount(),
                     fetchPGDeptCount(),
-                    fetchLogs(),
+                    fetchStudentsLogs(),
                 ]);
 
                 setName(prev => userName || prev);

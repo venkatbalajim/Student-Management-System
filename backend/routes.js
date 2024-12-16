@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken")
 const router = express.Router()
 const database = require("./database")
 const verifyToken = require("./middleware")
+const sendMail = require("./send_emails")
 
 dotenv.config()
 const secretKey = process.env.JWT_KEY
@@ -52,7 +53,7 @@ router.get("/verify", verifyToken, (req, res) => {
     res.status(200).send({ message: "You have already logged in.", user: req.user });
 });
 
-router.get("/majorCounts", async (req, res) => {
+router.get("/total-counts", async (req, res) => {
     try {
         const total = await database.query("SELECT * FROM students");
         const beCount = await database.query("SELECT * FROM students WHERE degree = ?", ["B.E"]);
@@ -71,7 +72,7 @@ router.get("/majorCounts", async (req, res) => {
     }
 })
 
-router.get("/ugDeptCounts", async (req, res) => {
+router.get("/ug-dept-counts", async (req, res) => {
     try {
         const bme = await database.query("SELECT * FROM students WHERE degree = ? AND department = ?", ["B.E", "BME"]);
         const csbs = await database.query("SELECT * FROM students WHERE degree = ? AND department = ?", ["B.E", "CSBS"]);
@@ -112,7 +113,7 @@ router.get("/ugDeptCounts", async (req, res) => {
     }
 })
 
-router.get("/pgDeptCounts", async (req, res) => {
+router.get("/pg-dept-counts", async (req, res) => {
     try {
         const ae = await database.query("SELECT * FROM students WHERE degree = ? AND department = ?", ["M.E", "AE"])
         const act = await database.query("SELECT * FROM students WHERE degree = ? AND department = ?", ["M.E", "ACT"])
@@ -134,7 +135,7 @@ router.get("/pgDeptCounts", async (req, res) => {
     }
 })
 
-router.get("/logs", async (req, res) => {
+router.get("/students-logs", async (req, res) => {
     try {
         const logs = await database.query("SELECT * FROM students_logs");
         return res.status(200).json({ success: true, logs: logs[0] });
@@ -154,7 +155,7 @@ router.get("/students", async (req, res) => {
     }
 })
 
-router.delete("/delete", async (req, res) => {
+router.delete("/delete-student", async (req, res) => {
     try {
         const id = req.query.id;
         const student = await database.query("DELETE FROM students WHERE id = ?", [id]);
@@ -165,7 +166,7 @@ router.delete("/delete", async (req, res) => {
     }
 });
 
-router.get("/filter", async (req, res) => {
+router.get("/filter-students", async (req, res) => {
     try {
         let query = "SELECT * FROM students WHERE 1 = 1 ";
         let values = [];
@@ -380,6 +381,169 @@ router.post("/update-password", verifyToken, async (req, res) => {
 
         const response = await database.query("UPDATE accounts SET password = ? WHERE id = ?", [newPassword, ID]);
         return res.status(200).json({ message: "Password updated successfully." });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+});
+
+router.post("/send-password", verifyToken, async (req, res) => {
+    try {
+        const ID = req.user.id;
+        const userResponse = await database.query("SELECT * FROM accounts WHERE id = ?", [ID]);
+
+        if (userResponse.length > 0) {
+            const email = userResponse[0][0].email;
+            const password = userResponse[0][0].password;
+            const subject = "Account Information";
+            const message = `<p>This email is sent from the Student Management System. Your account password is <b>${password}</b>.</p><br><br><p>Thank you</p>`;
+
+            const mailResponse = await sendMail(email, subject, message);
+            if (mailResponse) {
+                res.status(200).json({ message: "Password sent to the registered email." });
+            } else {
+                res.status(500).json({ error: "Unable to send password via email." });
+            }
+        } else {
+            return res.status(404).json({ error: "User not found." });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+});
+
+router.get("/check-admin", verifyToken, async (req, res) => {
+    try {
+        const ID = req.user.id;
+        const [userResponse] = await database.query("SELECT * FROM accounts WHERE id = ?", [ID]);
+        if (!userResponse || userResponse.length === 0) {
+            return res.status(404).json({ error: "User not found." });
+        }
+        const status = userResponse[0].admin;
+        return res.status(200).json({ admin: status });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+});
+
+router.get("/profile", verifyToken, async (req, res) => {
+    try {
+        const ID = req.user.id;
+        const [response] = await database.query("SELECT name, email, admin, position FROM accounts WHERE id = ?", [ID]);
+        if (!response || response.length === 0) {
+            return res.status(404).json({ error: "User not found." });
+        }
+        const profile = response[0];
+        return res.status(200).json(profile);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+})
+
+router.get("/staffs", async (req, res) => {
+    try {
+        const [response] = await database.query("SELECT id, name, email, admin, position FROM accounts");
+        if (!response || response.length === 0) {
+            return res.status(404).json({ error: "User not found." });
+        }
+        return res.status(200).json(response);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+})
+
+router.delete("/delete-staff", async (req, res) => {
+    try {
+        const id = req.query.id;
+        const response = await database.query("DELETE FROM accounts WHERE id = ?", [id]);
+        return res.status(200).json({ success: true, message: "Staff data deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+})
+
+router.get("/filter-staffs", async (req, res) => {
+    try {
+        let query = "SELECT id, name, email, admin, position FROM accounts WHERE 1 = 1 ";
+        let values = []
+
+        for (let key in req.query) {
+            if (key == 'name') {
+                query += "AND name LIKE ? ";
+                values.push(`%${req.query.name}%`);
+            } else if (key == 'email') {
+                query += "AND email LIKE ? ";
+                values.push(`%${req.query.email}%`);
+            } else if (key == 'position') {
+                query += "AND position LIKE ? ";
+                values.push(`%${req.query.position}%`);
+            } else if (key == 'admin') {
+                query += "AND admin = ? ";
+                if (req.query.admin === "Yes") {
+                    values.push(true);
+                } else if (req.query.admin === "No") {
+                    values.push(false);
+                }
+            }
+        }
+        query = query.trim();
+        if (query === "SELECT * FROM students WHERE 1 = 1") {
+            return res.status(400).json({ error: "No valid filters applied." });
+        }
+        const response = await database.query(query, values);
+        return res.status(200).json(response[0]);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+})
+
+router.get("/add-staff", async (req, res) => {
+    try {
+        const [id, name, email, position] = [req.query.id, req.query.name, req.query.email, req.query.position];
+        const admin = req.query.admin === "Yes";
+        if (!name || !email || !position) {
+            return res.status(400).json({ error: "Missing required fields: name, email, or position." });
+        }
+        const password = "password";
+        let query, queryParams, messageAction;
+        const existingAccount = await database.query("SELECT * FROM accounts WHERE id = ?", [id]);
+        if (existingAccount[0].length > 0) {
+            query = "UPDATE accounts SET name = ?, email = ?, position = ?, admin = ? WHERE id = ?";
+            queryParams = [name, email, position, admin, id];
+            messageAction = "updated";
+        } else {
+            query = "INSERT INTO accounts (name, email, position, admin, password) VALUES (?, ?, ?, ?, ?)";
+            queryParams = [name, email, position, admin, password];
+            messageAction = "added";
+        }
+        const response = await database.query(query, queryParams);
+        const subject = "Check your account information";
+        const message = `
+            <p>Hello ${name},</p>
+            <p>Your account information has been successfully ${messageAction} in the database of the Student Management System.</p>
+            <p><strong>Account Details:</strong></p>
+            <ul>
+                <li><strong>Name:</strong> ${name}</li>
+                <li><strong>Email:</strong> ${email}</li>
+                <li><strong>Position:</strong> ${position}</li>
+                <li><strong>Admin:</strong> ${admin ? "Yes" : "No"}</li>
+                <li><strong>Password:</strong> ${existingAccount.length > 0 ? "Unchanged" : password}</li>
+            </ul>
+            <p>Please log in to your account to verify these details.</p>
+        `;
+        const mailResponse = await sendMail(email, subject, message);
+        if (!mailResponse) {
+            return res.status(500).json({ error: "Failed to send email notification." });
+        }
+        return res.status(200).json({
+            message: `Account successfully ${messageAction} and email notification sent.`,
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Internal server error." });

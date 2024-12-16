@@ -1,6 +1,5 @@
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
-import { buildQueryString } from "./helpers"
 
 async function login(email, pwd) {
     try {
@@ -98,4 +97,32 @@ async function updatePassword(newPassword) {
     }
 }
 
-export { login, useLogout, checkAuthentication, fetchPassword, updatePassword, }
+async function sendPassword() {
+    try {
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Authentication token is missing.");
+        const response = await axios.post(
+            "http://localhost:5000/send-password", {},
+            { headers: { Authorization: `Bearer ${token}` }, }
+        );
+        if (response.status === 200) {
+            return response.data.message;
+        }
+    } catch (error) {
+        console.error(error);
+        if (error.response && error.response.data && error.response.data.error) {
+            throw new Error(error.response.data.error);
+        } else {
+            throw new Error(error.message);
+        }
+    }
+}
+
+export {
+    login,
+    useLogout,
+    checkAuthentication,
+    fetchPassword,
+    updatePassword,
+    sendPassword,
+}

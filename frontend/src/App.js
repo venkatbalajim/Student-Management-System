@@ -8,6 +8,8 @@ import Report from "./pages/report"
 import Settings from "./pages/settings"
 import StudentForm from "./pages/student_form"
 import StudentsDB from "./pages/students"
+import StaffsDB from "./pages/staffs"
+import StaffsForm from "./pages/staff_form"
 
 function App() {
   return (
@@ -17,9 +19,11 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/students" element={<StudentsDB />} />
         <Route path="/student-form" element={<StudentForm />} />
-        <Route path="/students-logs" element={<ActivityLogs />} />
+        <Route path="/logs" element={<ActivityLogs />} />
         <Route path="/report" element={<Report />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/staffs" element={<StaffsDB />} />
+        <Route path="/staff-form" element={<StaffsForm />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
