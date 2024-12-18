@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkAuthentication } from "../functions/authentication"
 import { deleteStudentData, fetchStudentsData } from "../functions/database";
-import { formatDate } from "../functions/helpers";
+import { formatDate, formatDateTime, generateExcel } from "../functions/helpers";
 
 function StudentsDB() {
     const navigate = useNavigate();
@@ -69,6 +69,13 @@ function StudentsDB() {
             borderRadius: "8px",
             padding: "10px",
         },
+        container: {
+            display: "flex",
+            flexWrap: "no-wrap",
+            gap: "20px",
+            justifyContent: "flex-start",
+            marginBottom: "20px",
+        },
     };
 
     useEffect(() => {
@@ -124,6 +131,25 @@ function StudentsDB() {
         navigate("/student-form", { state: data })
     }
 
+    function downloadExcel() {
+        try {
+            let finalData = [...data];
+            for (let i = 0; i < finalData.length; i++) {
+                let elt = finalData[i];
+                elt = { ...elt, 'date_of_birth': formatDate(elt.date_of_birth), 'fees_due': JSON.stringify(elt.fees_due) }
+                finalData[i] = elt;
+            }
+            const datetime = formatDateTime(new Date());
+            generateExcel(finalData, `students-data-${datetime}`);
+            setSnackbarMessage("Excel downloaded successfully.");
+            setSnackbarVisible(true);
+        } catch (error) {
+            console.error("Error downloading Excel file:", error);
+            setSnackbarMessage("Unable to download Excel file.");
+            setSnackbarVisible(true);
+        }
+    }
+
     if (isLoading) {
         return (
             <div>
@@ -152,6 +178,9 @@ function StudentsDB() {
                 ) : data.length > 0 ? (
                     <>
                         <div style={styles.tableContainer}>
+                            <div style={styles.container}>
+                                <Button name="Download as Excel" onClick={() => downloadExcel()} />
+                            </div>
                             <div>
                                 <p>Number of results: {data.length}</p>
                                 <br />

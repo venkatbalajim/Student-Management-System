@@ -1,4 +1,6 @@
 import axios from "axios"
+import * as xlsx from "xlsx"
+import { saveAs } from "file-saver"
 
 async function checkConnection() {
     try {
@@ -20,7 +22,7 @@ function isValidPersonalEmail(email) {
 
 function isValidCollegeEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const result = emailRegex.test(email) && email.toLowerCase().endsWith("@citchennai.net");
+    const result = emailRegex.test(email) && email.toLowerCase().endsWith("@college.net");
     if (!result) {
         throw new Error("Invalid college email.")
     }
@@ -41,6 +43,20 @@ function formatDateTwo(dateInput) {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+function formatDateTime(dateTimeString) {
+    const date = new Date(dateTimeString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    let minutes = date.getMinutes().toString().padStart(2, '0');
+    let seconds = date.getSeconds().toString().padStart(2, '0');
+    let period = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    hours = hours.toString().padStart(2, '0');
+    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds} ${period}`;
 }
 
 function buildQueryString(filters) {
@@ -75,12 +91,28 @@ function parseAndValidate(value, parseFn, fieldName) {
     return parsedValue;
 }
 
+function generateExcel(data, fileName) {
+    try {
+        const sheet = xlsx.utils.json_to_sheet(data);
+        const book = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(book, sheet, "Sheet1");
+        const excelBuffer = xlsx.write(book, { bookType: "xlsx", type: "array" });
+        const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+        saveAs(file, `${fileName}.xlsx`);
+    } catch (error) {
+        console.error("Error generating Excel file:", error);
+        throw new Error("Unable to download as Excel.");
+    }
+}
+
 export {
     checkConnection,
     formatDate,
     formatDateTwo,
+    formatDateTime,
     buildQueryString,
     parseAndValidate,
     isValidPersonalEmail,
     isValidCollegeEmail,
+    generateExcel,
 }

@@ -189,7 +189,28 @@ function StudentForm() {
                 } else if (key === "college_email") {
                     finalData[key] = finalData[key].toLowerCase();
                     isValidCollegeEmail(finalData[key])
-                } else if ((finalData[key] === "" || finalData[key] === null) && key != "diploma") {
+                } else if ((key === "tenth_percent" || key === "twelfth_percent") && (finalData[key] < 0 || finalData[key] > 100)) {
+                    setSnackbarMessage("Percent values should be between 0 and 100.");
+                    setSnackbarVisible(true);
+                    return;
+                } else if (key === "cgpa" && (finalData[key] < 0 || finalData[key] > 10)) {
+                    setSnackbarMessage("CGPA should be between 0 and 10.");
+                    setSnackbarVisible(true);
+                    return;
+                } else if (key === "fees" && (finalData[key] < 0)) {
+                    setSnackbarMessage("Annual Fees should be greater than 0.");
+                    setSnackbarVisible(true);
+                    return;
+                } else if (key === "fees_due") {
+                    for (let i = 0; i < finalData[key].length; i++) {
+                        if (finalData[key][i] < 0) {
+                            setSnackbarMessage("Fees Due should be greater than 0.");
+                            setSnackbarVisible(true);
+                            return;
+                        }
+                    }
+                }
+                else if ((finalData[key] === "" || finalData[key] === null) && key != "diploma") {
                     setSnackbarMessage("Kindly fill all the details.");
                     setSnackbarVisible(true);
                     return;
