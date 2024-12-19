@@ -71,7 +71,12 @@ async function fetchStudentsData() {
 
 async function deleteStudentData(id) {
     try {
-        const response = await axios.delete(`http://localhost:5000/delete-student?id=${id}`);
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Authentication token is missing.");
+        const response = await axios.delete(
+            `http://localhost:5000/delete-student?id=${id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
         if (response.status === 200) {
             return true;
         }
@@ -102,7 +107,12 @@ async function filterStudentsData(queryString) {
 
 async function addStudentData(queryString) {
     try {
-        const response = await axios.get(`http://localhost:5000/add-student?${queryString}`)
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Authentication token is missing.");
+        const response = await axios.get(
+            `http://localhost:5000/add-student?${queryString}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        )
         if (response.status === 200) {
             return true
         }
@@ -180,9 +190,9 @@ async function fetchStaffsData() {
     }
 }
 
-async function deleteStaffData(id) {
+async function deleteStaffData(queryString) {
     try {
-        const response = await axios.delete(`http://localhost:5000/delete-staff?id=${id}`);
+        const response = await axios.delete(`http://localhost:5000/delete-staff?${queryString}`);
         if (response.status === 200) {
             return true;
         }

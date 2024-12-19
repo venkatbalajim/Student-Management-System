@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkAuthentication } from "../functions/authentication";
 import { deleteStaffData, fetchStaffsData } from "../functions/database";
+import { buildQueryString } from "../functions/helpers";
 
 function StaffsDB() {
     const styles = {
@@ -87,17 +88,26 @@ function StaffsDB() {
         initializeData();
     }, []);
 
-    async function handleDelete(id) {
+    async function handleDelete(uName, uID, uEmail) {
         try {
-            const status = await deleteStaffData(id);
+            setIsLoading(true)
+            const params = {
+                name: uName,
+                id: uID,
+                email: uEmail,
+            }
+            const queryString = buildQueryString(params);
+            const status = await deleteStaffData(queryString);
             if (status) {
-                setData(prevData => prevData.filter(item => item.id !== id));
+                setData(prevData => prevData.filter(item => item.id !== uID));
                 setSnackbarMessage("Data is deleted successfully.");
                 setSnackbarVisible(true);
             }
         } catch (error) {
             setSnackbarMessage("Unable to delete the data.")
             setSnackbarVisible(true)
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -159,7 +169,7 @@ function StaffsDB() {
                                         <td style={styles.td}>
                                             <button
                                                 style={styles.actionButton}
-                                                onClick={() => handleDelete(staff.id)}
+                                                onClick={() => handleDelete(staff.name, staff.id, staff.email)}
                                             >
                                                 <i className="fa fa-trash" style={styles.icon}></i>
                                             </button>

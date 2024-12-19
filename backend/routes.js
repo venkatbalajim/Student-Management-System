@@ -137,7 +137,7 @@ router.get("/pg-dept-counts", async (req, res) => {
 
 router.get("/students-logs", async (req, res) => {
     try {
-        const logs = await database.query("SELECT * FROM students_logs");
+        const logs = await database.query("SELECT * FROM students_logs ORDER BY log_date DESC");
         return res.status(200).json({ success: true, logs: logs[0] });
     } catch (error) {
         console.error(error)
@@ -155,10 +155,19 @@ router.get("/students", async (req, res) => {
     }
 })
 
-router.delete("/delete-student", async (req, res) => {
+router.delete("/delete-student", verifyToken, async (req, res) => {
     try {
-        const id = req.query.id;
-        const student = await database.query("DELETE FROM students WHERE id = ?", [id]);
+        const studentID = req.query.id;
+        const student = await database.query("SELECT * FROM students WHERE id = ?", [studentID]);
+        const prevData = JSON.stringify(student[0][0]);
+        const staffID = req.user.id;
+        const staffName = req.user.name;
+        const currData = JSON.stringify({})
+        const action = "Deleted";
+        const params = [studentID, staffID, staffName, prevData, currData, action];
+        const query = "INSERT INTO students_logs (student_id, staff_id, staff_name, previous_data, curr_data, action) VALUES (?, ?, ?, ?, ?, ?)";
+        const response = await database.query("DELETE FROM students WHERE id = ?", [studentID]);
+        const result = await database.query(query, params);
         return res.status(200).json({ success: true, message: "Student deleted successfully" });
     } catch (error) {
         console.error(error);
@@ -307,47 +316,46 @@ router.get("/filter-students", async (req, res) => {
     }
 });
 
-router.get("/add-student", async (req, res) => {
+router.get("/add-student", verifyToken, async (req, res) => {
     try {
-        const query = "INSERT INTO students (name, gender, date_of_birth, personal_email, student_mobile, parent_mobile, address, register_number, college_email, degree, year, department, section, hosteller, cgpa, standing_arrear, history_arrear, tenth_percent, twelfth_percent, diploma, fees, fees_due) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), gender = VALUES(gender), date_of_birth = VALUES(date_of_birth), student_mobile = VALUES(student_mobile), parent_mobile = VALUES(parent_mobile), address = VALUES(address), register_number = VALUES(register_number), college_email = VALUES(college_email), degree = VALUES(degree), year = VALUES(year), department = VALUES(department), section = VALUES(section), hosteller = VALUES(hosteller), cgpa = VALUES(cgpa), standing_arrear = VALUES(standing_arrear), history_arrear = VALUES(history_arrear), tenth_percent = VALUES(tenth_percent), twelfth_percent = VALUES(twelfth_percent), diploma = VALUES(diploma), fees = VALUES(fees), fees_due = VALUES(fees_due);";
+        const staffID = req.user.id;
+        const staffName = req.user.name;
+        const {
+            name, gender, date_of_birth, personal_email, student_mobile, parent_mobile, address,
+            register_number, college_email, degree, year, department, section, hosteller, cgpa,
+            standing_arrear, history_arrear, tenth_percent, twelfth_percent, diploma, fees, fees_due
+        } = req.query;
 
-        const hosteller = req.query.hosteller ? parseInt(req.query.hosteller) : 0;
-        const cgpa = req.query.cgpa ? parseFloat(req.query.cgpa) : null;
-        const standingArrear = req.query.standing_arrear ? parseInt(req.query.standing_arrear) : 0;
-        const historyArrear = req.query.history_arrear ? parseInt(req.query.history_arrear) : 0;
-        const tenthPercent = req.query.tenth_percent ? parseFloat(req.query.tenth_percent) : null;
-        const twelfthPercent = req.query.twelfth_percent ? parseFloat(req.query.twelfth_percent) : null;
-        const fees = req.query.fees ? parseFloat(req.query.fees) : null;
-        const feesDueArray = req.query.fees_due
-            ? req.query.fees_due.split(",").map(fee => parseFloat(fee.trim()) || 0)
+        const existingStudent = await database.query("SELECT * FROM students WHERE personal_email = ?", [personal_email]);
+        console.log(existingStudent);
+        const isExisting = existingStudent[0].length > 0;
+        const prevData = isExisting ? JSON.stringify(existingStudent[0][0]) : JSON.stringify({});
+        const action = isExisting ? "Updated" : "Added";
+
+        const feesDueArray = fees_due
+            ? fees_due.split(",").map(fee => parseFloat(fee.trim()) || 0)
             : [];
 
+        const query = "INSERT INTO students (name, gender, date_of_birth, personal_email, student_mobile, parent_mobile, address, register_number, college_email, degree, year, department, section, hosteller, cgpa, standing_arrear, history_arrear, tenth_percent, twelfth_percent, diploma, fees, fees_due) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), gender = VALUES(gender), date_of_birth = VALUES(date_of_birth), student_mobile = VALUES(student_mobile), parent_mobile = VALUES(parent_mobile), address = VALUES(address), register_number = VALUES(register_number), college_email = VALUES(college_email), degree = VALUES(degree), year = VALUES(year), department = VALUES(department), section = VALUES(section), hosteller = VALUES(hosteller), cgpa = VALUES(cgpa), standing_arrear = VALUES(standing_arrear), history_arrear = VALUES(history_arrear), tenth_percent = VALUES(tenth_percent), twelfth_percent = VALUES(twelfth_percent), diploma = VALUES(diploma), fees = VALUES(fees), fees_due = VALUES(fees_due);";
+
         const values = [
-            req.query.name,
-            req.query.gender,
-            req.query.date_of_birth,
-            req.query.personal_email,
-            req.query.student_mobile,
-            req.query.parent_mobile,
-            req.query.address,
-            req.query.register_number,
-            req.query.college_email,
-            req.query.degree,
-            parseInt(req.query.year),
-            req.query.department,
-            req.query.section,
-            hosteller,
-            cgpa,
-            standingArrear,
-            historyArrear,
-            tenthPercent,
-            twelfthPercent,
-            req.query.diploma || null,
-            fees,
-            JSON.stringify(feesDueArray)
+            name, gender, date_of_birth, personal_email, student_mobile, parent_mobile, address,
+            register_number, college_email, degree, parseInt(year), department, section,
+            parseInt(hosteller) || 0, parseFloat(cgpa) || null, parseInt(standing_arrear) || 0,
+            parseInt(history_arrear) || 0, parseFloat(tenth_percent) || null, parseFloat(twelfth_percent) || null,
+            diploma || null, parseFloat(fees) || null, JSON.stringify(feesDueArray)
         ];
 
-        const response = await database.query(query, values);
+        await database.query(query, values);
+
+        const updatedStudent = await database.query("SELECT * FROM students WHERE personal_email = ?", [personal_email]);
+        const studentID = updatedStudent[0][0].id;
+        const currData = JSON.stringify(updatedStudent[0][0]);
+
+        const logQuery = "INSERT INTO students_logs (student_id, staff_id, staff_name, previous_data, curr_data, action) VALUES (?, ?, ?, ?, ?, ?);";
+        const logValues = [studentID, staffID, staffName, prevData, currData, action];
+        await database.query(logQuery, logValues);
+
         return res.status(200).json({ message: "Data added successfully." });
     } catch (error) {
         console.error(error);
@@ -460,7 +468,19 @@ router.delete("/delete-staff", async (req, res) => {
     try {
         const id = req.query.id;
         const response = await database.query("DELETE FROM accounts WHERE id = ?", [id]);
-        return res.status(200).json({ success: true, message: "Staff data deleted successfully" });
+        const name = req.query.name;
+        const email = req.query.email;
+        const subject = "You account is deleted";
+        const message = `
+            <p>Hello ${name},</p>
+            <p>Your account has been deleted from the Student Management System database. If you have any queries, kindly contact the admin staffs.</p>
+        `
+        const mailResponse = await sendMail(email, subject, message);
+        if (!mailResponse) {
+            return res.status(500).json({ error: "Failed to send email notification." });
+        } else {
+            return res.status(200).json({ success: true, message: "Staff data deleted successfully and email sent." });
+        }
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Internal server error." });
@@ -510,14 +530,15 @@ router.get("/add-staff", async (req, res) => {
         if (!name || !email || !position) {
             return res.status(400).json({ error: "Missing required fields: name, email, or position." });
         }
-        const password = "password";
-        let query, queryParams, messageAction;
+        let query, queryParams, messageAction, password;
         const existingAccount = await database.query("SELECT * FROM accounts WHERE id = ?", [id]);
         if (existingAccount[0].length > 0) {
+            password = existingAccount[0][0].password;
             query = "UPDATE accounts SET name = ?, email = ?, position = ?, admin = ? WHERE id = ?";
             queryParams = [name, email, position, admin, id];
             messageAction = "updated";
         } else {
+            password = "password";
             query = "INSERT INTO accounts (name, email, position, admin, password) VALUES (?, ?, ?, ?, ?)";
             queryParams = [name, email, position, admin, password];
             messageAction = "added";
@@ -533,7 +554,7 @@ router.get("/add-staff", async (req, res) => {
                 <li><strong>Email:</strong> ${email}</li>
                 <li><strong>Position:</strong> ${position}</li>
                 <li><strong>Admin:</strong> ${admin ? "Yes" : "No"}</li>
-                <li><strong>Password:</strong> ${existingAccount.length > 0 ? "Unchanged" : password}</li>
+                <li><strong>Password:</strong> ${password}</li>
             </ul>
             <p>Please log in to your account to verify these details.</p>
         `;
