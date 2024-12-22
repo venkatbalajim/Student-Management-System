@@ -51,7 +51,7 @@ async function fetchStudentsLogs() {
     try {
         const response = await axios.get("http://localhost:5000/students-logs")
         if (response.status == 200) {
-            return response.data.logs.slice(0, 5)
+            return response.data.logs;
         }
     } catch (error) {
         console.error("Error fetching logs: ", error)
@@ -231,6 +231,21 @@ async function addStaffData(queryString) {
         if (response.status === 200) {
             return true
         }
+    } catch (error) {
+        console.error(error);
+        if (error.response) {
+            throw new Error(error.response.data.error || "Failed  to upload data.")
+        } else if (error.request) {
+            throw new Error("Server did not respond. Please check your network.")
+        } else {
+            throw new Error(`Error: ${error.response}`)
+        }
+    }
+}
+
+async function clearStudentsLogs() {
+    try {
+        const response = await axios.delete("http://localhost:5000/clear-students-logs")
     } catch (error) {
         console.error(error);
         if (error.response) {

@@ -1,5 +1,4 @@
 import NavBar from "../components/nav_bar";
-import ActivityLogs from "../components/activity_logs";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PrimaryCard, SecondaryCard } from "../components/count_cards";
@@ -45,7 +44,6 @@ function Dashboard() {
     const [majorCount, setMajorCount] = useState(['-', '-', '-'])
     const [deptCount, setDeptCount] = useState(['-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'])
     const [pgDeptCount, setPGDeptCount] = useState(['-', '-', '-', '-', '-'])
-    const [logs, setLogs] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
 
@@ -71,7 +69,6 @@ function Dashboard() {
                 setMajorCount(prev => majorCounts || prev);
                 setDeptCount(prev => ugDeptCounts || prev);
                 setPGDeptCount(prev => pgDeptCounts || prev);
-                setLogs(prev => activityLogs || prev);
             } catch (error) {
                 console.error("Error fetching data:", error);
             } finally {
@@ -139,9 +136,6 @@ function Dashboard() {
                         <SecondaryCard count={pgDeptCount[4]} label="M.E VLSI" />
                     </div>
                 </div>
-                <br />
-                <h1 style={styles.title}>Recent Activity Logs</h1>
-                <ActivityLogs logs={logs} />
             </div>
         </div>
     );

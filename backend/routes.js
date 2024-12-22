@@ -327,7 +327,6 @@ router.get("/add-student", verifyToken, async (req, res) => {
         } = req.query;
 
         const existingStudent = await database.query("SELECT * FROM students WHERE personal_email = ?", [personal_email]);
-        console.log(existingStudent);
         const isExisting = existingStudent[0].length > 0;
         const prevData = isExisting ? JSON.stringify(existingStudent[0][0]) : JSON.stringify({});
         const action = isExisting ? "Updated" : "Added";

@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Login from "./pages/login"
 import Dashboard from "./pages/dashboard"
 import NotFound from "./pages/not_found"
-import ActivityLogs from "./pages/activity_logs"
+import StudentsLogs from "./pages/students_logs"
 import Report from "./pages/report"
 import Settings from "./pages/settings"
 import StudentForm from "./pages/student_form"
@@ -19,7 +19,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/students" element={<StudentsDB />} />
         <Route path="/student-form" element={<StudentForm />} />
-        <Route path="/logs" element={<ActivityLogs />} />
+        <Route path="/student-logs" element={<StudentsLogs />} />
         <Route path="/report" element={<Report />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/staffs" element={<StaffsDB />} />

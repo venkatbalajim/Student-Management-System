@@ -11,7 +11,7 @@ function NavBar() {
         async function adminStatus() {
             try {
                 const status = await checkAdmin();
-                setIsAdmin(status); // Assuming checkAdmin returns a boolean
+                setIsAdmin(status);
             } catch (error) {
                 console.error("Failed to fetch admin status:", error.message);
                 setIsAdmin(false);
@@ -35,7 +35,7 @@ function NavBar() {
 
     const buttonList = [
         { label: "Students Data", route: "/students" },
-        { label: "Activity Logs", route: "/logs" },
+        { label: "Activity Logs", route: "/student-logs" },
         { label: "Settings", route: "/settings" },
     ];
 
