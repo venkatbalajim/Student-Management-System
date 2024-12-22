@@ -192,7 +192,12 @@ async function fetchStaffsData() {
 
 async function deleteStaffData(queryString) {
     try {
-        const response = await axios.delete(`http://localhost:5000/delete-staff?${queryString}`);
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Authentication token is missing.");
+        const response = await axios.delete(
+            `http://localhost:5000/delete-staff?${queryString}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
         if (response.status === 200) {
             return true;
         }
@@ -227,14 +232,19 @@ async function filterStaffsData(queryString) {
 
 async function addStaffData(queryString) {
     try {
-        const response = await axios.get(`http://localhost:5000/add-staff?${queryString}`)
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Authentication token is missing.");
+        const response = await axios.get(
+            `http://localhost:5000/add-staff?${queryString}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        )
         if (response.status === 200) {
             return true
         }
     } catch (error) {
         console.error(error);
         if (error.response) {
-            throw new Error(error.response.data.error || "Failed  to upload data.")
+            throw new Error(error.response.data.error)
         } else if (error.request) {
             throw new Error("Server did not respond. Please check your network.")
         } else {
@@ -249,7 +259,40 @@ async function clearStudentsLogs() {
     } catch (error) {
         console.error(error);
         if (error.response) {
-            throw new Error(error.response.data.error || "Failed  to upload data.")
+            throw new Error(error.response.data.error)
+        } else if (error.request) {
+            throw new Error("Server did not respond. Please check your network.")
+        } else {
+            throw new Error(`Error: ${error.response}`)
+        }
+    }
+}
+
+async function fetchStaffsLogs() {
+    try {
+        const response = await axios.get("http://localhost:5000/staffs-logs");
+        if (response.status === 200) {
+            return response.data
+        }
+    } catch (error) {
+        console.error(error);
+        if (error.response) {
+            throw new Error(error.response.data.error)
+        } else if (error.request) {
+            throw new Error("Server did not respond. Please check your network.")
+        } else {
+            throw new Error(`Error: ${error.response}`)
+        }
+    }
+}
+
+async function clearStaffsLogs() {
+    try {
+        const response = await axios.delete("http://localhost:5000/clear-staffs-logs")
+    } catch (error) {
+        console.error(error);
+        if (error.response) {
+            throw new Error(error.response.data.error)
         } else if (error.request) {
             throw new Error("Server did not respond. Please check your network.")
         } else {
@@ -274,4 +317,7 @@ export {
     deleteStaffData,
     filterStaffsData,
     addStaffData,
+    clearStudentsLogs,
+    fetchStaffsLogs,
+    clearStaffsLogs
 }

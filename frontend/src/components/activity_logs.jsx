@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import ViewDetails from "../components/view_details";
+import { formatDateTime } from "../functions/helpers";
 
-function ActivityLogs({ logs }) {
+function ActivityLogs({ logs, type }) {
     const [dialogData, setDialogData] = useState(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -56,10 +57,11 @@ function ActivityLogs({ logs }) {
             <table style={styles.table}>
                 <thead>
                     <tr>
+                        <th style={styles.th}>Date and Time</th>
                         <th style={styles.th}>Log ID</th>
-                        <th style={styles.th}>Student ID</th>
-                        <th style={styles.th}>Staff ID</th>
-                        <th style={styles.th}>Staff Name</th>
+                        <th style={styles.th}>{type === 0 ? "Student ID" : "Account ID"}</th>
+                        <th style={styles.th}>{type === 0 ? "Staff ID" : "Admin ID"}</th>
+                        <th style={styles.th}>{type === 0 ? "Staff Name" : "Admin Name"}</th>
                         <th style={styles.th}>Action</th>
                         <th style={styles.th}>Details</th>
                     </tr>
@@ -68,8 +70,9 @@ function ActivityLogs({ logs }) {
                     {logs && logs.length > 0 ? (
                         logs.map((log, index) => (
                             <tr key={index}>
+                                <td style={styles.td}>{formatDateTime(log.log_date)}</td>
                                 <td style={styles.td}>{log.log_id}</td>
-                                <td style={styles.td}>{log.student_id}</td>
+                                <td style={styles.td}>{type === 0 ? log.student_id : log.account_id}</td>
                                 <td style={styles.td}>{log.staff_id}</td>
                                 <td style={styles.td}>{log.staff_name}</td>
                                 <td style={styles.td}>{log.action}</td>
@@ -90,7 +93,7 @@ function ActivityLogs({ logs }) {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="6" style={{ ...styles.td, textAlign: "center" }}>
+                            <td colSpan="7" style={{ ...styles.td, textAlign: "center" }}>
                                 No activity logs available.
                             </td>
                         </tr>
@@ -98,7 +101,7 @@ function ActivityLogs({ logs }) {
                 </tbody>
             </table>
 
-            <ViewDetails isOpen={isDialogOpen} onClose={closeDialog} data={dialogData} />
+            <ViewDetails type={type} isOpen={isDialogOpen} onClose={closeDialog} data={dialogData} />
         </div>
     );
 }

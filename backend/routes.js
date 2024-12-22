@@ -463,9 +463,20 @@ router.get("/staffs", async (req, res) => {
     }
 })
 
-router.delete("/delete-staff", async (req, res) => {
+router.delete("/delete-staff", verifyToken, async (req, res) => {
     try {
         const id = req.query.id;
+
+        let accountID, staffID, staffName, prevData, currData, action;
+        staffID = req.user.id;
+        staffName = req.user.name;
+        currData = JSON.stringify({});
+        action = "Deleted";
+        accountID = req.query.id;
+
+        const logData = await database.query("SELECT * FROM accounts WHERE id = ?", [id]);
+        prevData = JSON.stringify(logData[0][0])
+
         const response = await database.query("DELETE FROM accounts WHERE id = ?", [id]);
         const name = req.query.name;
         const email = req.query.email;
@@ -475,6 +486,7 @@ router.delete("/delete-staff", async (req, res) => {
             <p>Your account has been deleted from the Student Management System database. If you have any queries, kindly contact the admin staffs.</p>
         `
         const mailResponse = await sendMail(email, subject, message);
+        const logResponse = await database.query("INSERT INTO staffs_logs (account_id, staff_id, staff_name, previous_data, curr_data, action) VALUES (?, ?, ?, ?, ?, ?)", [accountID, staffID, staffName, prevData, currData, action]);
         if (!mailResponse) {
             return res.status(500).json({ error: "Failed to send email notification." });
         } else {
@@ -522,8 +534,12 @@ router.get("/filter-staffs", async (req, res) => {
     }
 })
 
-router.get("/add-staff", async (req, res) => {
+router.get("/add-staff", verifyToken, async (req, res) => {
     try {
+        let accountID, staffID, staffName, prevData, currData, action;
+        staffID = req.user.id;
+        staffName = req.user.name;
+
         const [id, name, email, position] = [req.query.id, req.query.name, req.query.email, req.query.position];
         const admin = req.query.admin === "Yes";
         if (!name || !email || !position) {
@@ -536,13 +552,22 @@ router.get("/add-staff", async (req, res) => {
             query = "UPDATE accounts SET name = ?, email = ?, position = ?, admin = ? WHERE id = ?";
             queryParams = [name, email, position, admin, id];
             messageAction = "updated";
+            prevData = JSON.stringify(existingAccount[0][0]);
+            action = "Updated";
         } else {
             password = "password";
             query = "INSERT INTO accounts (name, email, position, admin, password) VALUES (?, ?, ?, ?, ?)";
             queryParams = [name, email, position, admin, password];
             messageAction = "added";
+            prevData = JSON.stringify({})
+            action = "Added";
         }
         const response = await database.query(query, queryParams);
+        const again = await database.query("SELECT * FROM accounts WHERE email = ?", [email])
+
+        accountID = again[0][0].id;
+        currData = JSON.stringify(again[0][0]);
+
         const subject = "Check your account information";
         const message = `
             <p>Hello ${name},</p>
@@ -561,6 +586,9 @@ router.get("/add-staff", async (req, res) => {
         if (!mailResponse) {
             return res.status(500).json({ error: "Failed to send email notification." });
         }
+
+        const logResponse = await database.query("INSERT INTO staffs_logs (account_id, staff_id, staff_name, previous_data, curr_data, action) VALUES (?, ?, ?, ?, ?, ?)", [accountID, staffID, staffName, prevData, currData, action]);
+
         return res.status(200).json({
             message: `Account successfully ${messageAction} and email notification sent.`,
         });
@@ -569,5 +597,54 @@ router.get("/add-staff", async (req, res) => {
         return res.status(500).json({ error: "Internal server error." });
     }
 });
+
+router.delete("/clear-students-logs", async (req, res) => {
+    try {
+        const response = await database.query("TRUNCATE TABLE students_logs");
+        return res.status(200).json({ message: "Students logs successfully cleared." });
+    } catch (error) {
+        console.error(error);
+        if (error.response) {
+            throw new Error(error.response.data.error)
+        } else if (error.request) {
+            throw new Error("Server did not respond. Please check your network.")
+        } else {
+            throw new Error(`Error: ${error.response}`)
+        }
+    }
+})
+
+router.get("/staffs-logs", async (req, res) => {
+    try {
+        const response = await database.query("SELECT * FROM staffs_logs ORDER BY log_date DESC");
+        const staffsLogs = response[0];
+        return res.status(200).json(staffsLogs);
+    } catch (error) {
+        console.error(error);
+        if (error.response) {
+            throw new Error(error.response.data.error)
+        } else if (error.request) {
+            throw new Error("Server did not respond. Please check your network.")
+        } else {
+            throw new Error(`Error: ${error.response}`)
+        }
+    }
+})
+
+router.delete("/clear-staffs-logs", async (req, res) => {
+    try {
+        const response = await database.query("TRUNCATE TABLE staffs_logs");
+        return res.status(200).json({ message: "Staffs logs successfully cleared." });
+    } catch (error) {
+        console.error(error);
+        if (error.response) {
+            throw new Error(error.response.data.error)
+        } else if (error.request) {
+            throw new Error("Server did not respond. Please check your network.")
+        } else {
+            throw new Error(`Error: ${error.response}`)
+        }
+    }
+})
 
 module.exports = router;

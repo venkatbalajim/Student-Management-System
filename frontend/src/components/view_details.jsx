@@ -1,7 +1,7 @@
 import React from "react";
 import { formatDate } from "../functions/helpers";
 
-function ViewDetails({ isOpen, onClose, data }) {
+function ViewDetails({ type, isOpen, onClose, data }) {
     const styles = {
         dialogOverlay: {
             position: "fixed",
@@ -63,31 +63,42 @@ function ViewDetails({ isOpen, onClose, data }) {
         },
     };
 
-    const orderedKeys = [
-        "id",
-        "name",
-        "register_number",
-        "gender",
-        "date_of_birth",
-        "address",
-        "degree",
-        "year",
-        "department",
-        "section",
-        "personal_email",
-        "college_email",
-        "student_mobile",
-        "parent_mobile",
-        "tenth_percent",
-        "twelfth_percent",
-        "diploma",
-        "cgpa",
-        "fees",
-        "fees_due",
-        "hosteller",
-        "history_arrear",
-        "standing_arrear",
-    ];
+    let orderedKeys;
+    if (type === 0) {
+        orderedKeys = [
+            "id",
+            "name",
+            "register_number",
+            "gender",
+            "date_of_birth",
+            "address",
+            "degree",
+            "year",
+            "department",
+            "section",
+            "personal_email",
+            "college_email",
+            "student_mobile",
+            "parent_mobile",
+            "tenth_percent",
+            "twelfth_percent",
+            "diploma",
+            "cgpa",
+            "fees",
+            "fees_due",
+            "hosteller",
+            "history_arrear",
+            "standing_arrear",
+        ];
+    } else {
+        orderedKeys = [
+            "id",
+            "name",
+            "email",
+            "position",
+            "admin",
+        ]
+    }
 
     const keyMappings = {
         id: "ID",
@@ -113,6 +124,9 @@ function ViewDetails({ isOpen, onClose, data }) {
         history_arrear: "History of Arrear",
         standing_arrear: "Standing Arrear",
         register_number: "Register No",
+        email: "Email",
+        position: "Position",
+        admin: "Admin"
     };
 
     function categoryValue(value) {
