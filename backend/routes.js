@@ -67,7 +67,6 @@ router.get("/total-counts", async (req, res) => {
         ];
         return res.status(200).json({ message: true, counts: majorLengths });
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 })
@@ -108,7 +107,6 @@ router.get("/ug-dept-counts", async (req, res) => {
         return res.status(200).json({ success: true, counts: departmentLengths });
 
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 })
@@ -130,7 +128,6 @@ router.get("/pg-dept-counts", async (req, res) => {
         return res.status(200).json({ success: true, counts: departmentLengths });
 
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 })
@@ -140,7 +137,6 @@ router.get("/students-logs", async (req, res) => {
         const logs = await database.query("SELECT * FROM students_logs ORDER BY log_date DESC");
         return res.status(200).json({ success: true, logs: logs[0] });
     } catch (error) {
-        console.error(error)
         return res.status(500).json({ error: "Internal server error." });
     }
 })
@@ -150,7 +146,6 @@ router.get("/students", async (req, res) => {
         const students = await database.query("SELECT * FROM students");
         return res.status(200).json(students[0]);
     } catch (error) {
-        console.error(error)
         return res.status(500).json({ error: "Internal server error." });
     }
 })
@@ -170,7 +165,6 @@ router.delete("/delete-student", verifyToken, async (req, res) => {
         const result = await database.query(query, params);
         return res.status(200).json({ success: true, message: "Student deleted successfully" });
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 });
@@ -311,7 +305,6 @@ router.get("/filter-students", async (req, res) => {
         return res.status(200).json(response[0]);
 
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 });
@@ -326,7 +319,7 @@ router.get("/add-student", verifyToken, async (req, res) => {
             standing_arrear, history_arrear, tenth_percent, twelfth_percent, diploma, fees, fees_due
         } = req.query;
 
-        const existingStudent = await database.query("SELECT * FROM students WHERE personal_email = ?", [personal_email]);
+        const existingStudent = await database.query("SELECT * FROM students WHERE register_number = ?", [register_number]);
         const isExisting = existingStudent[0].length > 0;
         const prevData = isExisting ? JSON.stringify(existingStudent[0][0]) : JSON.stringify({});
         const action = isExisting ? "Updated" : "Added";
@@ -335,7 +328,7 @@ router.get("/add-student", verifyToken, async (req, res) => {
             ? fees_due.split(",").map(fee => parseFloat(fee.trim()) || 0)
             : [];
 
-        const query = "INSERT INTO students (name, gender, date_of_birth, personal_email, student_mobile, parent_mobile, address, register_number, college_email, degree, year, department, section, hosteller, cgpa, standing_arrear, history_arrear, tenth_percent, twelfth_percent, diploma, fees, fees_due) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), gender = VALUES(gender), date_of_birth = VALUES(date_of_birth), student_mobile = VALUES(student_mobile), parent_mobile = VALUES(parent_mobile), address = VALUES(address), register_number = VALUES(register_number), college_email = VALUES(college_email), degree = VALUES(degree), year = VALUES(year), department = VALUES(department), section = VALUES(section), hosteller = VALUES(hosteller), cgpa = VALUES(cgpa), standing_arrear = VALUES(standing_arrear), history_arrear = VALUES(history_arrear), tenth_percent = VALUES(tenth_percent), twelfth_percent = VALUES(twelfth_percent), diploma = VALUES(diploma), fees = VALUES(fees), fees_due = VALUES(fees_due);";
+        const query = "INSERT INTO students (name, gender, date_of_birth, personal_email, student_mobile, parent_mobile, address, register_number, college_email, degree, year, department, section, hosteller, cgpa, standing_arrear, history_arrear, tenth_percent, twelfth_percent, diploma, fees, fees_due) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), gender = VALUES(gender), date_of_birth = VALUES(date_of_birth), student_mobile = VALUES(student_mobile), parent_mobile = VALUES(parent_mobile), address = VALUES(address), register_number = VALUES(register_number), college_email = VALUES(college_email), personal_email = VALUES(personal_email), degree = VALUES(degree), year = VALUES(year), department = VALUES(department), section = VALUES(section), hosteller = VALUES(hosteller), cgpa = VALUES(cgpa), standing_arrear = VALUES(standing_arrear), history_arrear = VALUES(history_arrear), tenth_percent = VALUES(tenth_percent), twelfth_percent = VALUES(twelfth_percent), diploma = VALUES(diploma), fees = VALUES(fees), fees_due = VALUES(fees_due);";
 
         const values = [
             name, gender, date_of_birth, personal_email, student_mobile, parent_mobile, address,
@@ -347,7 +340,7 @@ router.get("/add-student", verifyToken, async (req, res) => {
 
         await database.query(query, values);
 
-        const updatedStudent = await database.query("SELECT * FROM students WHERE personal_email = ?", [personal_email]);
+        const updatedStudent = await database.query("SELECT * FROM students WHERE register_number = ?", [register_number]);
         const studentID = updatedStudent[0][0].id;
         const currData = JSON.stringify(updatedStudent[0][0]);
 
@@ -357,7 +350,6 @@ router.get("/add-student", verifyToken, async (req, res) => {
 
         return res.status(200).json({ message: "Data added successfully." });
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 });
@@ -372,7 +364,6 @@ router.get("/fetch-password", verifyToken, async (req, res) => {
             return res.status(404).json({ error: "User not found." });
         }
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 });
@@ -389,7 +380,6 @@ router.post("/update-password", verifyToken, async (req, res) => {
         const response = await database.query("UPDATE accounts SET password = ? WHERE id = ?", [newPassword, ID]);
         return res.status(200).json({ message: "Password updated successfully." });
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 });
@@ -415,7 +405,6 @@ router.post("/send-password", verifyToken, async (req, res) => {
             return res.status(404).json({ error: "User not found." });
         }
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 });
@@ -430,7 +419,6 @@ router.get("/check-admin", verifyToken, async (req, res) => {
         const status = userResponse[0].admin;
         return res.status(200).json({ admin: status });
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 });
@@ -445,7 +433,6 @@ router.get("/profile", verifyToken, async (req, res) => {
         const profile = response[0];
         return res.status(200).json(profile);
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 })
@@ -458,7 +445,6 @@ router.get("/staffs", async (req, res) => {
         }
         return res.status(200).json(response);
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 })
@@ -475,6 +461,7 @@ router.delete("/delete-staff", verifyToken, async (req, res) => {
         accountID = req.query.id;
 
         const logData = await database.query("SELECT * FROM accounts WHERE id = ?", [id]);
+        delete logData[0][0].password;
         prevData = JSON.stringify(logData[0][0])
 
         const response = await database.query("DELETE FROM accounts WHERE id = ?", [id]);
@@ -493,7 +480,6 @@ router.delete("/delete-staff", verifyToken, async (req, res) => {
             return res.status(200).json({ success: true, message: "Staff data deleted successfully and email sent." });
         }
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 })
@@ -529,7 +515,6 @@ router.get("/filter-staffs", async (req, res) => {
         const response = await database.query(query, values);
         return res.status(200).json(response[0]);
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 })
@@ -552,6 +537,7 @@ router.get("/add-staff", verifyToken, async (req, res) => {
             query = "UPDATE accounts SET name = ?, email = ?, position = ?, admin = ? WHERE id = ?";
             queryParams = [name, email, position, admin, id];
             messageAction = "updated";
+            delete existingAccount[0][0].password;
             prevData = JSON.stringify(existingAccount[0][0]);
             action = "Updated";
         } else {
@@ -566,6 +552,7 @@ router.get("/add-staff", verifyToken, async (req, res) => {
         const again = await database.query("SELECT * FROM accounts WHERE email = ?", [email])
 
         accountID = again[0][0].id;
+        delete again[0][0].password;
         currData = JSON.stringify(again[0][0]);
 
         const subject = "Check your account information";
@@ -593,7 +580,6 @@ router.get("/add-staff", verifyToken, async (req, res) => {
             message: `Account successfully ${messageAction} and email notification sent.`,
         });
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error." });
     }
 });
@@ -603,7 +589,6 @@ router.delete("/clear-students-logs", async (req, res) => {
         const response = await database.query("TRUNCATE TABLE students_logs");
         return res.status(200).json({ message: "Students logs successfully cleared." });
     } catch (error) {
-        console.error(error);
         if (error.response) {
             throw new Error(error.response.data.error)
         } else if (error.request) {
@@ -620,7 +605,6 @@ router.get("/staffs-logs", async (req, res) => {
         const staffsLogs = response[0];
         return res.status(200).json(staffsLogs);
     } catch (error) {
-        console.error(error);
         if (error.response) {
             throw new Error(error.response.data.error)
         } else if (error.request) {
@@ -636,7 +620,6 @@ router.delete("/clear-staffs-logs", async (req, res) => {
         const response = await database.query("TRUNCATE TABLE staffs_logs");
         return res.status(200).json({ message: "Staffs logs successfully cleared." });
     } catch (error) {
-        console.error(error);
         if (error.response) {
             throw new Error(error.response.data.error)
         } else if (error.request) {

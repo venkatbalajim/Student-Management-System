@@ -22,7 +22,7 @@ function isValidPersonalEmail(email) {
 
 function isValidCollegeEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const result = emailRegex.test(email) && email.toLowerCase().endsWith("@citchennai.net");
+    const result = emailRegex.test(email) && email.toLowerCase().endsWith("@college.net");
     if (!result) {
         throw new Error("Invalid college email.")
     }

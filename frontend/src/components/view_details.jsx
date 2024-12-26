@@ -137,6 +137,14 @@ function ViewDetails({ type, isOpen, onClose, data }) {
         }
     }
 
+    function adminValue(value) {
+        if (value === 0) {
+            return "No"
+        } else {
+            return "Yes"
+        }
+    }
+
     function renderDataTable(data) {
         if (typeof data === "string") {
             return <div style={styles.emptyData}>{data}</div>;
@@ -161,9 +169,10 @@ function ViewDetails({ type, isOpen, onClose, data }) {
                                     {key === "date_of_birth" && value !== null
                                         ? formatDate(value)
                                         : key === "hosteller" && value !== null ?
-                                            categoryValue(value) : value !== null
-                                                ? value.toString()
-                                                : ""}
+                                            categoryValue(value) : key === "admin" && value !== null ?
+                                                adminValue(value) : value !== null
+                                                    ? value.toString()
+                                                    : ""}
                                 </td>
                             </tr>
                         );

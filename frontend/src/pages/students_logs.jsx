@@ -5,6 +5,7 @@ import Snackbar from "../components/snack_bar";
 import { useNavigate } from "react-router-dom";
 import { checkAuthentication } from "../functions/authentication";
 import { checkAdmin, clearStudentsLogs, fetchStudentsLogs } from "../functions/database";
+import { formatDateTime, generateExcel } from "../functions/helpers";
 
 function StudentsLogs() {
     const navigate = useNavigate();
@@ -73,6 +74,37 @@ function StudentsLogs() {
         }
     }
 
+    function handleDownloadLogs() {
+        try {
+            setIsLoading(true);
+
+            let finalLogs = logs.map(log => ({
+                ...log,
+                previous_data: JSON.parse(JSON.stringify(log.previous_data)),
+                curr_data: JSON.parse(JSON.stringify(log.curr_data))
+            }));
+
+            for (let i = 0; i < finalLogs.length; i++) {
+                const log = finalLogs[i];
+                log.log_date = formatDateTime(log.log_date);
+                log.previous_data = JSON.stringify(log.previous_data);
+                log.curr_data = JSON.stringify(log.curr_data);
+                finalLogs[i] = log;
+            }
+
+            const datetime = formatDateTime(new Date());
+            generateExcel(finalLogs, `students-logs-${datetime}`);
+            setSnackbarMessage("Excel downloaded successfully.");
+            setSnackbarVisible(true);
+        } catch (error) {
+            console.error("Error downloading Excel file:", error);
+            setSnackbarMessage("Unable to download Excel file.");
+            setSnackbarVisible(true);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     if (isLoading) {
         return (
             <div>
@@ -90,6 +122,8 @@ function StudentsLogs() {
                         <Button name="Back to Home" onClick={() => { navigate("/dashboard"); }} />
                         {(isAdmin == 1) && (
                             <>
+                                &nbsp;&nbsp;&nbsp;
+                                <Button name="Download Logs" onClick={handleDownloadLogs} />
                                 &nbsp;&nbsp;&nbsp;
                                 <Button name="Clear Students Logs" onClick={handleClearLogs} />
                                 &nbsp;&nbsp;&nbsp;
